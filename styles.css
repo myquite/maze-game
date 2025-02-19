@@ -1,8 +1,9 @@
 :root {
-    --cell-size: 40px;  /* This won't be used for now */
+    --cell-size: 40px;
     --border-color: white;
     --player-color: blue;
     --goal-color: red;
+    --spacing: min(1rem, 2vh);
 }
 
 body {
@@ -10,35 +11,40 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    height: 100vh;
     background-color: black;
     margin: 0;
+    padding: 0;
     color: var(--border-color);
     font-family: Arial, sans-serif;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 canvas {
     border: 2px solid var(--border-color);
-    margin: 1rem;
-    max-width: 100%;
-    max-height: 80vh;
+    margin: var(--spacing);
+    max-width: 95vw;
+    max-height: calc(100vh - 120px);
 }
 
 #timer {
-    font-size: clamp(1.2rem, 4vw, 1.5rem);
-    margin: 1rem;
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    margin: var(--spacing);
     text-align: center;
+    height: 1.5em;
 }
 
 #newMazeBtn {
-    padding: 0.8rem 1.5rem;
-    font-size: clamp(1rem, 3vw, 1.2rem);
+    padding: 0.5rem 1rem;
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
     cursor: pointer;
     background-color: var(--border-color);
     border: none;
     border-radius: 5px;
-    margin: 1rem;
+    margin: var(--spacing);
     transition: transform 0.2s, opacity 0.2s;
+    height: 2.5em;
 }
 
 #newMazeBtn:hover {
@@ -62,16 +68,17 @@ canvas {
 }
 
 @media (max-height: 600px) {
-    body {
-        padding: 0.5rem;
+    :root {
+        --spacing: 0.5vh;
     }
     
     #timer {
-        margin: 0.5rem;
+        font-size: clamp(0.8rem, 2.5vw, 1rem);
+        margin: var(--spacing);
     }
     
     #newMazeBtn {
-        margin: 0.5rem;
-        padding: 0.5rem 1rem;
+        padding: 0.3rem 0.8rem;
+        margin: var(--spacing);
     }
 } 
