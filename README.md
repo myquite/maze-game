@@ -33,8 +33,8 @@ A browser-based maze game where players navigate through procedurally generated 
    cd maze-game
    ```
 
-2. Open the `index.html` file in your browser
+2. Open the `index.html` file in your browser and play the game.
 
-## Customization
+*AI-Assisted Developement
 
-- To change the maze size, modify the `cols` and `rows` variables in the script
+
