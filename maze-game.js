@@ -282,8 +282,8 @@ function draw() {
     }
     
     try {
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         // Draw grid with fallback
         if (grid && grid.length > 0) {
@@ -316,19 +316,19 @@ function draw() {
             ctx.drawImage(playerImg, player.x * cellSize, player.y * cellSize, cellSize, cellSize);
         } else {
             // Fallback if image isn't loaded
-            ctx.fillStyle = "blue";
-            ctx.fillRect(player.x * cellSize + 5, player.y * cellSize + 5, cellSize - 10, cellSize - 10);
+    ctx.fillStyle = "blue";
+    ctx.fillRect(player.x * cellSize + 5, player.y * cellSize + 5, cellSize - 10, cellSize - 10);
         }
-        
+    
         // Draw goal (exit) using the exit image
         if (exitImg.complete) {
             ctx.drawImage(exitImg, goal.x * cellSize, goal.y * cellSize, cellSize, cellSize);
         } else {
             // Fallback if image isn't loaded
-            ctx.fillStyle = "red";
-            ctx.fillRect(goal.x * cellSize + 10, goal.y * cellSize + 10, cellSize - 20, cellSize - 20);
-        }
-        
+    ctx.fillStyle = "red";
+    ctx.fillRect(goal.x * cellSize + 10, goal.y * cellSize + 10, cellSize - 20, cellSize - 20);
+}
+
         // Draw minotaur if active
         if (minotaur.active) {
             if (minotaurImg.complete) {
@@ -519,7 +519,7 @@ function moveMinotaur() {
         if (minotaur.x === player.x && minotaur.y === player.y) {
             gameOver = true;
             gameActive = false;
-            clearInterval(timer);
+        clearInterval(timer);
             clearInterval(minotaurTimer);
             timerDisplay.textContent = `GAME OVER!`;
         }

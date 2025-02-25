@@ -1,119 +1,100 @@
-/* Import pixel art font */
+/* ===== IMPORTS ===== */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+/* ===== VARIABLES ===== */
 :root {
-    --tile-size: 32px;  /* Base tile size */
-    --cell-size: calc(var(--tile-size) * 2);  /* Each cell is 2x2 tiles */
+    /* Sizing */
+    --tile-size: 32px;
+    --cell-size: calc(var(--tile-size) * 2);
     --wall-size: 16px;
-    --highlight-color: whitesmoke;
+    --spacing: min(1rem, 2vh);
+    
+    /* Colors */
+    --bg-color: #333;
+    --text-color: whitesmoke;
     --border-color: #222222;
     --player-color: blue;
     --goal-color: red;
-    --spacing: min(1rem, 2vh);
-    --pixel-font: 'Press Start 2P', cursive;  /* Add the pixel font variable */
+    --success-color: lime;
+    --danger-color: red;
+    
+    /* Typography */
+    --pixel-font: 'Press Start 2P', cursive;
 }
 
+/* ===== BASE STYLES ===== */
 body {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #333;
+    background-color: var(--bg-color);
     margin: 0;
     padding: 0;
-    color: var(--highlight-color);
-    font-family: var(--pixel-font);  /* Apply pixel font to the body */
+    color: var(--text-color);
+    font-family: var(--pixel-font);
     overflow: hidden;
     box-sizing: border-box;
 }
 
+/* ===== GAME ELEMENTS ===== */
+/* Canvas */
 canvas {
     border: 4px solid var(--border-color);
     margin: var(--spacing);
-    image-rendering: pixelated;  /* Keep pixel art sharp */
-    image-rendering: crisp-edges;  /* Fallback */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges; /* Fallback */
     max-width: 98vw;
     max-height: 90vh;
-    object-fit: contain; /* Maintain aspect ratio */
+    object-fit: contain;
 }
 
+/* Timer */
 #timer {
-    font-size: clamp(0.7rem, 2vw, 1rem);  /* Slightly smaller for pixel font */
+    font-size: clamp(0.7rem, 2vw, 1rem);
     margin: var(--spacing);
     text-align: center;
     height: 1.5em;
-    letter-spacing: 1px;  /* Better spacing for readability */
+    letter-spacing: 1px;
 }
 
-#newMazeBtn, #fullscreenBtn {
+/* Game Title */
+.game-title {
+    font-size: clamp(1rem, 4vw, 1.8rem);
+    margin: var(--spacing) 0;
+    text-align: center;
+    color: var(--text-color);
+    text-shadow: 3px 3px 0px rgba(0,0,0,0.5);
+    letter-spacing: 2px;
+}
+
+/* ===== BUTTONS ===== */
+#newMazeBtn, 
+#fullscreenBtn {
     padding: 0.5rem 1rem;
-    font-size: clamp(0.6rem, 1.5vw, 0.8rem);  /* Smaller for pixel font */
+    font-size: clamp(0.6rem, 1.5vw, 0.8rem);
     cursor: pointer;
-    background-color: var(--highlight-color);
-    color: #333;  /* Dark text on light button */
+    background-color: var(--text-color);
+    color: var(--bg-color);
     border: none;
     border-radius: 5px;
     margin: var(--spacing);
     transition: transform 0.2s, opacity 0.2s;
     height: 2.5em;
-    font-family: var(--pixel-font);  /* Apply pixel font to buttons */
-    text-transform: uppercase;  /* Common in retro games */
+    font-family: var(--pixel-font);
+    text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-#newMazeBtn:hover {
+#newMazeBtn:hover,
+#fullscreenBtn:hover {
     transform: scale(1.05);
 }
 
 #newMazeBtn:active {
     transform: scale(0.95);
     opacity: 0.8;
-}
-
-#fullscreenBtn:hover {
-    transform: scale(1.05);
-}
-
-/* Media Queries */
-@media (max-width: 640px) {
-    canvas {
-        transform: scale(0.9);
-        transform-origin: center;
-    }
-}
-
-@media (max-width: 480px) {
-    canvas {
-        transform: scale(0.8);
-    }
-}
-
-@media (max-height: 500px) {
-    canvas {
-        transform: scale(0.7);
-    }
-}
-
-/* Add these styles at the end of the file */
-
-.github-corner:hover .octo-arm {
-    animation: octocat-wave 560ms ease-in-out;
-}
-
-@keyframes octocat-wave {
-    0%, 100% { transform: rotate(0); }
-    20%, 60% { transform: rotate(-25deg); }
-    40%, 80% { transform: rotate(10deg); }
-}
-
-@media (max-width: 500px) {
-    .github-corner:hover .octo-arm {
-        animation: none;
-    }
-    .github-corner .octo-arm {
-        animation: octocat-wave 560ms ease-in-out;
-    }
 }
 
 /* Game controls container */
@@ -126,7 +107,49 @@ canvas {
     width: 100%;
 }
 
-/* Fullscreen adjustments */
+/* ===== GITHUB CORNER ===== */
+.github-corner:hover .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+}
+
+@keyframes octocat-wave {
+    0%, 100% { transform: rotate(0); }
+    20%, 60% { transform: rotate(-25deg); }
+    40%, 80% { transform: rotate(10deg); }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+/* Medium screens */
+@media (max-width: 640px) {
+    canvas {
+        transform: scale(0.9);
+        transform-origin: center;
+    }
+}
+
+/* Small screens */
+@media (max-width: 480px) {
+    canvas {
+        transform: scale(0.8);
+    }
+    
+    .github-corner:hover .octo-arm {
+        animation: none;
+    }
+    
+    .github-corner .octo-arm {
+        animation: octocat-wave 560ms ease-in-out;
+    }
+}
+
+/* Short screens */
+@media (max-height: 500px) {
+    canvas {
+        transform: scale(0.7);
+    }
+}
+
+/* ===== FULLSCREEN MODE ===== */
 :fullscreen body {
     width: 100vw;
     height: 100vh;
@@ -136,15 +159,4 @@ canvas {
     max-width: 100vw;
     max-height: 90vh;
     margin: 0;
-}
-
-/* Add a retro game header */
-.game-title {
-    font-family: var(--pixel-font);
-    font-size: clamp(1rem, 4vw, 1.8rem);
-    margin: var(--spacing) 0;
-    text-align: center;
-    color: var(--highlight-color);
-    text-shadow: 3px 3px 0px rgba(0,0,0,0.5);
-    letter-spacing: 2px;
 } 
