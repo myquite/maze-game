@@ -19,10 +19,13 @@ minotaurImg.onerror = () => console.error("Failed to load minotaur image");
 let gameOver = false;
 let minotaur = { x: -1, y: -1, active: false };
 let minotaurTimer = null; // Timer for independent movement
-const MINOTAUR_MOVE_INTERVAL = 300; // Time in ms between minotaur moves (lower = faster)
 
 // Store the final time as a single value
 let finalTime = 0;
+
+// Update these constants at the top of your file
+const BASE_MINOTAUR_INTERVAL = 300; // Starting speed (slower)
+const MIN_MINOTAUR_INTERVAL = 100;  // Maximum speed (faster)
 
 // Function to resize the canvas and maze
 function resizeCanvas() {
@@ -437,6 +440,26 @@ function movePlayer(dx, dy) {
     }
 }
 
+// Add this helper function to calculate distance between two points
+function calculateDistance(point1, point2) {
+    return Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
+}
+
+// Add this function to calculate minotaur speed based on player's progress
+function calculateMinotaurSpeed() {
+    // Calculate distances
+    const playerToStart = calculateDistance(player, {x: 0, y: 0});
+    const totalDistance = calculateDistance({x: 0, y: 0}, goal);
+    
+    // Calculate progress (0 to 1)
+    const progress = Math.min(playerToStart / totalDistance, 1);
+    
+    // Calculate speed (interval gets smaller as progress increases)
+    const interval = BASE_MINOTAUR_INTERVAL - (progress * (BASE_MINOTAUR_INTERVAL - MIN_MINOTAUR_INTERVAL));
+    
+    return Math.max(Math.floor(interval), MIN_MINOTAUR_INTERVAL);
+}
+
 // Update the activateMinotaur function
 function activateMinotaur() {
     if (gameActive && !mazeCompleted && !gameOver) {
@@ -457,26 +480,47 @@ function activateMinotaur() {
         minotaur.y = 0;
         minotaur.active = true;
         
-        // Start independent movement timer
+        // Update minotaur movement speed periodically
         if (minotaurTimer) clearInterval(minotaurTimer);
-        minotaurTimer = setInterval(() => {
+        
+        function updateMinotaurMovement() {
             if (gameActive && !gameOver && !mazeCompleted) {
-                moveMinotaur();
+                const newInterval = calculateMinotaurSpeed();
                 
-                // Check for collision after every move
-                if (player.x === minotaur.x && player.y === minotaur.y) {
-                    gameOver = true;
-                    gameActive = false;
-                    clearInterval(timer);
-                    clearInterval(minotaurTimer);
-                    timerDisplay.textContent = `GAME OVER!`;
-                    timerDisplay.style.color = "red";
-                }
-            } else {
-                // Stop moving if game is over or completed
-                clearInterval(minotaurTimer);
+                // Clear existing timer
+                if (minotaurTimer) clearInterval(minotaurTimer);
+                
+                // Set new timer with updated interval
+                minotaurTimer = setInterval(() => {
+                    if (gameActive && !gameOver && !mazeCompleted) {
+                        moveMinotaur();
+                        
+                        // Check for collision after every move
+                        if (player.x === minotaur.x && player.y === minotaur.y) {
+                            gameOver = true;
+                            gameActive = false;
+                            clearInterval(timer);
+                            clearInterval(minotaurTimer);
+                            timerDisplay.textContent = `GAME OVER!`;
+                            timerDisplay.style.color = "red";
+                        }
+                    } else {
+                        // Stop moving if game is over or completed
+                        clearInterval(minotaurTimer);
+                    }
+                }, newInterval);
             }
-        }, MINOTAUR_MOVE_INTERVAL);
+        }
+        
+        // Initial movement setup
+        updateMinotaurMovement();
+        
+        // Update speed every second
+        setInterval(() => {
+            if (gameActive && !gameOver && !mazeCompleted) {
+                updateMinotaurMovement();
+            }
+        }, 1000);
     }
 }
 
