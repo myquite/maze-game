@@ -10,6 +10,20 @@ const timerDisplay = document.getElementById('timer');
 let gameActive = false;
 let mazeCompleted = false;
 
+// Add minotaur image and properties
+const minotaurImg = new Image();
+minotaurImg.src = "graphics/minotaur.png";
+minotaurImg.onerror = () => console.error("Failed to load minotaur image");
+
+// Add game states and minotaur properties
+let gameOver = false;
+let minotaur = { x: -1, y: -1, active: false };
+let minotaurTimer = null; // Timer for independent movement
+const MINOTAUR_MOVE_INTERVAL = 300; // Time in ms between minotaur moves (lower = faster)
+
+// Store the final time as a single value
+let finalTime = 0;
+
 // Function to resize the canvas and maze
 function resizeCanvas() {
     // Get available screen space (accounting for some margins)
@@ -314,15 +328,57 @@ function draw() {
             ctx.fillStyle = "red";
             ctx.fillRect(goal.x * cellSize + 10, goal.y * cellSize + 10, cellSize - 20, cellSize - 20);
         }
+        
+        // Draw minotaur if active
+        if (minotaur.active) {
+            if (minotaurImg.complete) {
+                ctx.drawImage(minotaurImg, minotaur.x * cellSize, minotaur.y * cellSize, cellSize, cellSize);
+            } else {
+                ctx.fillStyle = "red";
+                ctx.beginPath();
+                ctx.arc(minotaur.x * cellSize + cellSize/2, minotaur.y * cellSize + cellSize/2, 
+                         cellSize/3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Draw game over overlay
+        if (gameOver) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "red";
+            ctx.font = `bold ${Math.floor(cellSize/2)}px ${getComputedStyle(document.body).fontFamily}`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("GAME OVER", canvas.width/2, canvas.height/2);
+            ctx.fillText("The minotaur caught you!", canvas.width/2, canvas.height/2 + cellSize);
+        }
+        
+        // Draw completion overlay
+        if (mazeCompleted) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "lime";
+            ctx.font = `bold ${Math.floor(cellSize/1.5)}px ${getComputedStyle(document.body).fontFamily}`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("YOU ESCAPED!", canvas.width/2, canvas.height/2 - cellSize/2);
+            
+            // Use the stored finalTime instead of recalculating
+            ctx.font = `bold ${Math.floor(cellSize)}px ${getComputedStyle(document.body).fontFamily}`;
+            ctx.fillText(`${finalTime}s`, canvas.width/2, canvas.height/2 + cellSize/2);
+        }
     } catch (e) {
         console.error("Error in draw function:", e);
     }
 }
 
-// Update the movePlayer function to start and handle the timer properly
+// Update the movePlayer function to hide the timer display
 function movePlayer(dx, dy) {
-    // Don't allow movement if maze is completed
-    if (mazeCompleted) return;
+    // Don't allow movement if game is over or maze is completed
+    if (mazeCompleted || gameOver) return;
     
     let nextX = player.x + dx;
     let nextY = player.y + dy;
@@ -340,24 +396,229 @@ function movePlayer(dx, dy) {
         if (!startTime) {
             startTime = Date.now();
             gameActive = true;
-            // Create timer that updates display every 100ms
             timer = setInterval(updateTimer, 100);
+            
+            // Schedule minotaur to start chasing after 5 seconds
+            setTimeout(activateMinotaur, 5000);
         }
         
         player.x = nextX;
         player.y = nextY;
         
-        // Check for completion
-        if (player.x === goal.x && player.y === goal.y) {
-            mazeCompleted = true;
+        // Check for collision with minotaur
+        if (player.x === minotaur.x && player.y === minotaur.y && minotaur.active) {
+            gameOver = true;
             gameActive = false;
             clearInterval(timer);
+            clearInterval(minotaurTimer);
+            timerDisplay.textContent = `GAME OVER!`;
+            timerDisplay.style.color = "red";
+            return;
+        }
+        
+        // Check for completion
+        if (player.x === goal.x && player.y === goal.y) {
+            // Calculate final time ONCE to ensure consistency
+            finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
             
-            // Get final time and display it
-            const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-            timerDisplay.textContent = `Time: ${finalTime}s`;
+            // Set game state
+            mazeCompleted = true;
+            gameActive = false;
+            
+            // Stop all timers immediately
+            clearInterval(timer);
+            clearInterval(minotaurTimer);
+            
+            // Hide the timer display at the top completely
+            if (timerDisplay) {
+                timerDisplay.style.display = 'none';
+            }
         }
     }
+}
+
+// Update the activateMinotaur function
+function activateMinotaur() {
+    if (gameActive && !mazeCompleted && !gameOver) {
+        console.log("The minotaur is coming!");
+        
+        // Add a visual warning before minotaur appears
+        timerDisplay.textContent = "The Minotaur is coming!";
+        timerDisplay.style.color = "red";
+        
+        // Restore timer display after a brief warning
+        setTimeout(() => {
+            timerDisplay.style.color = "";
+            if (gameActive) updateTimer();
+        }, 1500);
+        
+        // Initialize minotaur at starting position
+        minotaur.x = 0;
+        minotaur.y = 0;
+        minotaur.active = true;
+        
+        // Start independent movement timer
+        if (minotaurTimer) clearInterval(minotaurTimer);
+        minotaurTimer = setInterval(() => {
+            if (gameActive && !gameOver && !mazeCompleted) {
+                moveMinotaur();
+                
+                // Check for collision after every move
+                if (player.x === minotaur.x && player.y === minotaur.y) {
+                    gameOver = true;
+                    gameActive = false;
+                    clearInterval(timer);
+                    clearInterval(minotaurTimer);
+                    timerDisplay.textContent = `GAME OVER!`;
+                    timerDisplay.style.color = "red";
+                }
+            } else {
+                // Stop moving if game is over or completed
+                clearInterval(minotaurTimer);
+            }
+        }, MINOTAUR_MOVE_INTERVAL);
+    }
+}
+
+// Improved pathfinding algorithm for minotaur
+function moveMinotaur() {
+    if (!minotaur.active || gameOver || mazeCompleted) return;
+    
+    // Calculate paths to both player and exit
+    const pathToPlayer = findPath(minotaur, player);
+    const pathToExit = findPath(minotaur, goal);
+    
+    // If player is closer to exit than minotaur is to player, intercept at exit
+    const useInterception = pathToExit && pathToPlayer && 
+                            pathToExit.length < pathToPlayer.length * 1.5;
+    
+    // Choose which path to follow
+    let nextPosition;
+    if (useInterception && Math.random() < 0.7) {
+        // Try to intercept player at exit by moving toward exit
+        console.log("Minotaur intercepting toward exit");
+        
+        // Find a point along exit path to intercept
+        const interceptPoint = Math.floor(pathToExit.length * 0.5); // Halfway to exit
+        if (pathToExit.length > interceptPoint) {
+            nextPosition = pathToExit[1]; // Next step toward exit (index 0 is current position)
+        } else {
+            nextPosition = pathToPlayer[1]; // Fallback to chasing directly
+        }
+    } else if (pathToPlayer && pathToPlayer.length > 1) {
+        // Chase player directly
+        nextPosition = pathToPlayer[1]; // Next step toward player
+    }
+    
+    // Move the minotaur
+    if (nextPosition) {
+        minotaur.x = nextPosition.x;
+        minotaur.y = nextPosition.y;
+        
+        // Check if caught player
+        if (minotaur.x === player.x && minotaur.y === player.y) {
+            gameOver = true;
+            gameActive = false;
+            clearInterval(timer);
+            clearInterval(minotaurTimer);
+            timerDisplay.textContent = `GAME OVER!`;
+        }
+    }
+}
+
+// A* pathfinding algorithm
+function findPath(start, end) {
+    // Priority queue for frontier
+    const frontier = [{
+        x: start.x,
+        y: start.y,
+        cost: 0,
+        heuristic: manhattanDistance(start, end),
+        parent: null
+    }];
+    
+    // Set of visited nodes
+    const visited = new Set();
+    
+    // Find path
+    while (frontier.length > 0) {
+        // Sort by f = g + h (cost + heuristic)
+        frontier.sort((a, b) => (a.cost + a.heuristic) - (b.cost + b.heuristic));
+        
+        // Get the node with lowest cost
+        const current = frontier.shift();
+        const currentKey = `${current.x},${current.y}`;
+        
+        // Mark as visited
+        visited.add(currentKey);
+        
+        // Check if reached goal
+        if (current.x === end.x && current.y === end.y) {
+            // Reconstruct path
+            const path = [];
+            let node = current;
+            while (node) {
+                path.unshift({x: node.x, y: node.y});
+                node = node.parent;
+            }
+            return path;
+        }
+        
+        // Find current cell in the grid
+        const cell = grid.find(c => c.x === current.x && c.y === current.y);
+        if (!cell) continue;
+        
+        // Try all possible directions
+        const directions = [
+            { dx: 0, dy: -1, wall: 'top' },    // Up
+            { dx: 1, dy: 0, wall: 'right' },   // Right
+            { dx: 0, dy: 1, wall: 'bottom' },  // Down
+            { dx: -1, dy: 0, wall: 'left' }    // Left
+        ];
+        
+        for (const dir of directions) {
+            // Check if wall exists in this direction
+            if (cell.walls[dir.wall]) continue;
+            
+            const nx = current.x + dir.dx;
+            const ny = current.y + dir.dy;
+            const neighborKey = `${nx},${ny}`;
+            
+            // Skip if already visited
+            if (visited.has(neighborKey)) continue;
+            
+            // Compute cost (1 per step)
+            const newCost = current.cost + 1;
+            
+            // Compute heuristic (Manhattan distance to goal)
+            const heuristic = manhattanDistance({x: nx, y: ny}, end);
+            
+            // Check if neighbor is already in frontier with higher cost
+            const existingIndex = frontier.findIndex(n => n.x === nx && n.y === ny);
+            if (existingIndex >= 0 && frontier[existingIndex].cost > newCost) {
+                // Update with better path
+                frontier[existingIndex].cost = newCost;
+                frontier[existingIndex].parent = current;
+            } else if (existingIndex === -1) {
+                // Add to frontier
+                frontier.push({
+                    x: nx,
+                    y: ny,
+                    cost: newCost,
+                    heuristic: heuristic,
+                    parent: current
+                });
+            }
+        }
+    }
+    
+    // No path found
+    return null;
+}
+
+// Helper function for Manhattan distance
+function manhattanDistance(a, b) {
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
 // Add a function to update the timer display
@@ -432,15 +693,23 @@ if (newMazeBtn) {
 function resetGame() {
     console.log("Resetting game and generating new maze...");
     
-    // Reset timer
+    // Reset timer and game state
     if (timer) clearInterval(timer);
+    if (minotaurTimer) clearInterval(minotaurTimer);
+    
     startTime = null;
     gameActive = false;
     mazeCompleted = false;
+    gameOver = false;
     
-    // Reset timer display
+    // Reset minotaur
+    minotaur = { x: -1, y: -1, active: false };
+    
+    // Reset and show timer display
     if (timerDisplay) {
         timerDisplay.textContent = 'Time: 0.0s';
+        timerDisplay.style.color = ""; // Reset to default color
+        timerDisplay.style.display = ""; // Show it again
     }
     
     // Reset game state
@@ -483,6 +752,9 @@ function resetGame() {
     
     // Update display
     draw();
+    
+    // Reset stored values
+    finalTime = 0;
 }
 
 // Add a game animation loop function
