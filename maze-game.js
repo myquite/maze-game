@@ -24,7 +24,7 @@ let minotaurTimer = null; // Timer for independent movement
 let finalTime = 0;
 
 // Update these constants at the top of your file
-const BASE_MINOTAUR_INTERVAL = 300; // Starting speed (slower)
+const BASE_MINOTAUR_INTERVAL = 400; // Starting speed (slower)
 const MIN_MINOTAUR_INTERVAL = 100;  // Maximum speed (faster)
 
 // Function to resize the canvas and maze
@@ -538,7 +538,7 @@ function moveMinotaur() {
     
     // Choose which path to follow
     let nextPosition;
-    if (useInterception && Math.random() < 0.7) {
+    if (useInterception && Math.random() < 0.6) {
         // Try to intercept player at exit by moving toward exit
         console.log("Minotaur intercepting toward exit");
         
